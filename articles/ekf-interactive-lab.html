@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="EKF Interactive Lab 的 KF、EKF 与简化 IMU/GPS 工作台、场景和验证方法。">
+  <title>从 KF 到 EKF：用一个交互式实验室理解状态估计 · Personal AI Lab</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell nav">
+      <a class="brand" href="../index.html">Personal AI Lab</a>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="../index.html">首页</a>
+        <a href="../projects/ekf-interactive-lab.html">项目详情</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="shell article-hero">
+      <div class="eyebrow">项目介绍</div>
+      <h1>从 KF 到 EKF：用一个交互式实验室理解状态估计</h1>
+      <p class="lead">EKF Interactive Lab 是 Personal AI Lab 的首个作品。这个学习工具把状态估计的关键步骤变成可运行的二维合成实验。浏览器负责改参数、播放逐帧结果和导出数据，Python 内核负责生成合成轨迹、执行滤波和计算指标。</p>
+      <p class="article-meta">更新于 2026-11-24。本文介绍已通过工程验收的 V0.1 本地工作台。</p>
+    </section>
+    <section class="section">
+      <div class="shell article-layout">
+        <article class="prose">
+          <h2 id="why">为什么做</h2>
+          <p>读公式很容易把“预测”“观测更新”和“协方差”看成几行抽象矩阵。把这些量放回时间轴，就可以追问先验如何得到、观测何时到达、噪声假设如何改变修正幅度，以及拒绝异常观测后保留了哪些信息。</p>
+          <p>项目先用线性位置观测建立 KF 基线，再用固定信标的距离和方位角观测引入 EKF 的局部线性化，最后用已去重力的二维 IMU 加速度与低频 GPS 位置做多传感器融合。融合实验假设姿态已知。每个模块都能运行、回放、查看当前帧诊断，并导出实际生效的配置与结果。</p>
+          <h2 id="modules">三个模块，从可解释的基线开始</h2>
+          <h3>KF：先看线性预测和更新</h3>
+          <p>KF 模块使用二维匀速状态 <code>[px, py, vx, vy]</code>，GPS 只观测位置。界面可以调整 X/Y 测量噪声、离散或连续过程噪声、初始不确定度、时长和随机种子，然后点击“运行实验”。</p>
+          <figure class="article-figure"><a href="../assets/kf.png"><img src="../assets/kf.png" alt="KF 工作台显示轨迹、指标和播放控件" loading="lazy"></a><figcaption>KF 页面：同一份结果同时提供轨迹、整段指标、时序曲线和逐帧诊断。</figcaption></figure>
+          <p>在种子 42、20 s、0.1 s 步长且双轴 GPS 标准差均为 2 m 的 KF 基线中，后验位置 RMSE 为 0.905974 m。同一批 GPS 位置观测的 RMSE 为 2.6862 m。误差使用同一合成真值和 t&gt;0 的 200 个采样时刻计算，结论限于这组配置。</p>
+          <figure class="article-figure"><a href="../assets/kf-basic-trajectory.png"><img src="../assets/kf-basic-trajectory.png" alt="KF 基础场景的真值、观测与估计轨迹" loading="lazy"></a><figcaption>基础场景图：观测点可以偏离真值，估计则由预测和更新共同决定。</figcaption></figure>
+          <h3>EKF：非线性来自观测模型</h3>
+          <p>EKF 模块把观测换成固定信标到目标的距离和方位角。运动预测仍是线性的，但观测函数包含平方根和 <code>atan2</code>，每次更新都在同一个先验状态上计算预测观测 <code>h</code> 和雅可比 <code>H</code>。方位残差由测量与预测的角差归一化到 <code>[-π, π)</code> 得到。</p>
+          <figure class="article-figure"><a href="../assets/ekf.png"><img src="../assets/ekf.png" alt="EKF 工作台显示固定信标、轨迹和诊断" loading="lazy"></a><figcaption>EKF 页面：可以切换基本跟踪、方位角跨越 ±π、低估方位噪声和较大初始误差四个预设。</figcaption></figure>
+          <p>跨角预设在 10.4 s 的直接角差为 <code>+359.629°</code>，归一化后用于更新的创新是 <code>-0.371°</code>。整段包角创新的最大绝对值为 <code>4.225°</code>。在原点信标、种子 42、20 s、0.1 s 步长和 1 m／1° 观测噪声标准差下，估计位置 RMSE 为 0.345611 m。</p>
+          <figure class="article-figure"><a href="../assets/ekf-angle-wrap.png"><img src="../assets/ekf-angle-wrap.png" alt="EKF 方位角跨越 ±π 的残差对照" loading="lazy"></a><figcaption>跨角图：原始方位角跨过分支边界时，包角消除了直接角差中接近一整圈的跳变。</figcaption></figure>
+          <h3>Fusion：把问题放回传感器时序</h3>
+          <p>Fusion 是简化的二维 IMU/GPS 线性 KF。输入假设姿态已知，加速度已经转换到世界坐标并去除重力；IMU 以默认 100 Hz 做预测，GPS 以 5 Hz 校正位置。时间轴分别记录观测的采样和到达。</p>
+          <figure class="article-figure"><a href="../assets/fusion.png"><img src="../assets/fusion.png" alt="Fusion 工作台显示纯惯性、GPS 与在线融合轨迹" loading="lazy"></a><figcaption>Fusion 页面：轨迹、GPS 事件、NIS 和当前帧诊断共享同一播放索引。</figcaption></figure>
+          <p>实验包含正常多频率、GPS 中断恢复、固定延迟补偿和异常观测门限四类场景。中断场景在 <code>[8, 12)</code> s 丢失 20 条 GPS，12.0 s 恢复校正；固定延迟场景把 GPS 延后 60 个 IMU tick，即 0.6 s，并在采样时刻保存先验、观测到达并被接受后，在采样时刻更新，再沿保存的 IMU 输入重传播至到达时刻。此前已输出的状态历史保持冻结。</p>
+          <figure class="article-figure"><a href="../assets/fusion-delay-diagnostics.png"><img src="../assets/fusion-delay-diagnostics.png" alt="Fusion 固定延迟诊断：采样与到达时刻分开显示" loading="lazy"></a><figcaption>延迟诊断：首条 GPS 在 0.2 s 采样、0.8 s 到达，界面保留采样时刻、到达时刻和回放步数。</figcaption></figure>
+          <h2 id="verify">如何验证数值、时序和界面</h2>
+          <p>这次交付把数值、时序和界面放在同一条证据链上。</p>
+          <ul><li>三个模块的离线实验与真实 HTTP 结果逐项比对，涵盖时间轴、观测、状态、协方差、创新、事件、诊断和指标。</li><li>固定延迟场景的独立逐前缀参考在延迟 0、2、7 tick 下复算状态和协方差，最大绝对差约为 <code>8.88e-16</code> 与 <code>6.66e-16</code>。</li><li>第 3 步集成验收记录了 193 项严格测试通过；生产构建也通过。Chrome 桌面 1440×1000 和窄屏 390×844 均检查了模块切换、参数提交、播放、单步、时间轴定位、导出和错误提示。</li></ul>
+          <p>Fusion 异常实验采用种子 42、20 s 和默认传感器频率，在 10 s 注入 <code>[25, -15] m</code> 的 GPS 偏移。门限关闭时，滤波器接受这条观测，位置 RMSE 为 1.109734 m。对同一批观测启用默认 NIS 门限 9.21034 后，位置 RMSE 为 0.712547 m。共拒绝两条观测，其中一条未注入偏移。门限值来自当前模型假设下的卡方分布，误拒绝率需要另行统计。</p>
+          <figure class="article-figure"><a href="../assets/fusion-dropout-error.png"><img src="../assets/fusion-dropout-error.png" alt="Fusion GPS 中断期间的误差与 IMU 预测" loading="lazy"></a><figcaption>中断图：GPS 缺失期间仍可预测，恢复后再由位置观测校正。</figcaption></figure>
+          <figure class="article-figure"><a href="../assets/fusion-outlier-events.png"><img src="../assets/fusion-outlier-events.png" alt="Fusion 异常观测的 NIS 与接受/拒绝事件" loading="lazy"></a><figcaption>异常图：同一输入在门限开关两种配置下保留不同的事件状态和诊断。</figcaption></figure>
+          <h2 id="ai">AI 协作放在什么位置</h2>
+          <p>这个项目将 AI 协作用于资料整理、方案拆分、代码实现与验证材料整理。资料整理与方案拆分用于明确模型边界；实现阶段保留离线入口和浏览器 API 的共同执行路径；验证阶段用手算、中心差分、独立参考实现、严格回归和真实 HTTP 对照逐项检查。</p>
+          <p>这些检查把文章里的数字连回具体配置和可复跑的场景。误差变化的原因、门限的适用条件和模型假设仍需结合这些证据逐项理解。</p>
+          <h2 id="limits">当前限制</h2>
+          <p>当前证据限于合成二维场景和固定种子。Fusion 的适用条件包括已知姿态、已去重力的加速度和单源有序固定延迟。真实 IMU/GNSS、零偏估计、三维姿态、任意乱序和飞行验证均超出当前模型与验收范围。</p>
+          <p>跨种子统计一致性、长期压力测试、跨浏览器全面兼容性和公网 FastAPI 部署仍未完成。后续可在更多几何和噪声条件下复跑统计实验，再分别研究传感器时钟、偏置和坐标变换。</p>
+          <h2 id="reproduce">复现与延伸阅读</h2>
+          <p>完整实验平台在本地运行。启动 FastAPI 和 Vite 后，从工作台侧栏选择 KF Lab、EKF Lab 或 Sensor Fusion。三个模块均可运行固定预设并导出实际配置与结果 JSON。</p>
+          <p>如果想从原理开始，推荐阅读 Welch 与 Bishop 的 <a href="https://www.cs.utexas.edu/~pstone/Courses/393Rfall15/readings/Welch%2BBishop-TR-95.pdf">An Introduction to the Kalman Filter</a>。如果想了解工程系统中传感器延迟、创新检验和多源融合的真实边界，可对照 PX4 官方的 <a href="https://docs.px4.io/main/en/advanced_config/tuning_the_ecl_ekf">PX4 EKF2 导航滤波指南</a>。</p>
+          <p><a class="back-link" href="../projects/ekf-interactive-lab.html#run">查看本地运行说明</a></p>
+        </article>
+        <aside class="toc" aria-label="文章目录">
+          <p class="eyebrow">目录</p>
+          <a href="#why">为什么做</a>
+          <a href="#modules">三个模块，从可解释的基线开始</a>
+          <a href="#verify">如何验证数值、时序和界面</a>
+          <a href="#ai">AI 协作放在什么位置</a>
+          <a href="#limits">当前限制</a>
+          <a href="#reproduce">复现与延伸阅读</a>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="shell footer-inner"><a class="back-link" href="../index.html">返回作品集首页</a><span>EKF Interactive Lab V0.1</span></div>
+  </footer>
+</body>
+</html>

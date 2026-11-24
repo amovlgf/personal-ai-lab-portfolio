@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="EKF Interactive Lab 介绍、实验结果及本地运行说明。">
+  <title>EKF Interactive Lab · 项目详情</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell nav">
+      <a class="brand" href="../index.html">Personal AI Lab</a>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="../index.html">首页</a>
+        <a href="../articles/ekf-interactive-lab.html">项目文章</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="shell project-hero">
+      <div class="eyebrow">状态估计实验 · V0.1</div>
+      <h1>EKF Interactive Lab</h1>
+      <p class="lead">当观测带噪、角度跨界或 GPS 晚到时，估计器如何修正状态？这个本地工作台用二维合成轨迹、逐帧回放和结果导出，把每次预测和更新的依据展示出来。</p>
+      <div class="button-row">
+        <a class="button" href="#results">查看实验结果</a>
+        <a class="button secondary" href="#run">查看运行说明</a>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="modules">
+      <div class="shell">
+        <div class="section-head"><h2 id="modules">三组交互实验</h2><p>三个模块都在二维平面上估计位置和速度。场景、噪声和初值可以配置，结果可逐帧查看并导出 JSON。</p></div>
+        <div class="grid-3">
+          <article class="card"><h3>KF · 线性位置观测</h3><p>用合成 GPS 位置校正二维匀速预测。调整测量噪声和过程模型，查看轨迹、误差、创新与增益。</p></article>
+          <article class="card"><h3>EKF · 距离和方位角</h3><p>用固定信标的非线性观测更新二维状态。可以查看局部雅可比、方位残差包角、近信标保护与跳过更新。</p></article>
+          <article class="card"><h3>Fusion · 简化 IMU/GPS</h3><p>已知姿态下使用去重力后的世界坐标二维加速度预测，以 GPS 位置校正。场景覆盖中断恢复、固定延迟回放与 NIS 门限拒绝。</p></article>
+        </div>
+        <div class="image-grid module-figures">
+          <figure class="figure">
+            <a href="../assets/kf.png"><img src="../assets/kf.png" alt="查看 KF Lab 原图，含参数、轨迹、指标和回放" loading="lazy"></a>
+            <figcaption>KF Lab 的位置观测基线。</figcaption>
+          </figure>
+          <figure class="figure">
+            <a href="../assets/ekf.png"><img src="../assets/ekf.png" alt="查看 EKF Lab 原图，含信标、方位角跨界预设与轨迹" loading="lazy"></a>
+            <figcaption>EKF Lab 的方位角跨越 ±π 预设。</figcaption>
+          </figure>
+          <figure class="figure">
+            <a href="../assets/fusion.png"><img src="../assets/fusion.png" alt="查看 Fusion 原图，含纯惯性、GPS 和在线融合轨迹" loading="lazy"></a>
+            <figcaption>Fusion 的正常多频率实验。</figcaption>
+          </figure>
+          <figure class="figure">
+            <a href="../assets/fusion-delay-diagnostics.png"><img src="../assets/fusion-delay-diagnostics.png" alt="查看固定延迟诊断原图，含 GPS 采样、到达与重传播次数" loading="lazy"></a>
+            <figcaption>固定延迟诊断显示首条 GPS 在 0.2 s 采样、0.8 s 到达。</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="results">
+      <div class="shell">
+        <div class="section-head"><h2 id="results">代表性实验结果</h2><p>以下来自 V0.1 的合成实验，随机种子为 42。每组对照沿用同一场景内的观测和评分口径。</p></div>
+        <div class="image-grid">
+          <figure class="figure">
+            <a href="../assets/kf-basic-trajectory.png"><img src="../assets/kf-basic-trajectory.png" alt="查看 KF 基础实验原图，含真值、含噪位置观测与估计" loading="lazy"></a>
+            <figcaption><strong>KF 位置观测。</strong> 20 s、步长 0.1 s、双轴 GPS 标准差均为 2 m 时，200 个评分时刻的估计位置 RMSE 为 0.905974 m，同一批 GPS 为 2.6862 m。</figcaption>
+          </figure>
+          <figure class="figure">
+            <a href="../assets/ekf-angle-wrap.png"><img src="../assets/ekf-angle-wrap.png" alt="查看 EKF 角残差原图，含直接角差与包角后的创新" loading="lazy"></a>
+            <figcaption><strong>EKF 方位角跨界。</strong> 原点信标、20 s、步长 0.1 s、观测噪声标准差 1 m 和 1°。t = 10.4 s 直接角差为 +359.629°，包角后用于更新的创新为 −0.371°。</figcaption>
+          </figure>
+          <figure class="figure">
+            <a href="../assets/fusion-dropout-error.png"><img src="../assets/fusion-dropout-error.png" alt="查看 GPS 中断误差原图，含纯惯性和在线融合对照" loading="lazy"></a>
+            <figcaption><strong>Fusion 中断恢复。</strong> 20 s、IMU 100 Hz、GPS 5 Hz。阴影区 [8, 12) s 中缺失 20 条 GPS，滤波继续预测，12.0 s 恢复位置校正。</figcaption>
+          </figure>
+          <figure class="figure">
+            <a href="../assets/fusion-outlier-events.png"><img src="../assets/fusion-outlier-events.png" alt="查看 GPS 异常门限原图，含接受、拒绝和 NIS 对照" loading="lazy"></a>
+            <figcaption><strong>Fusion 异常门限。</strong> 同频率和时长下，10 s 注入 [25, −15] m 偏移。关闭门限与开启 9.21034 门限的位置 RMSE 分别为 1.109734 m、0.712547 m。两条被拒观测中有一条未注入偏移。</figcaption>
+          </figure>
+        </div>
+        <p class="callout result-note">固定延迟预设设置 60 个 IMU tick（0.6 s）。97 条观测到达并被接受，实验结束时还有 3 条待到达。滤波器从被接受观测的采样时刻重传播，已输出的在线历史保持冻结。</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="implementation">
+      <div class="shell">
+        <div class="section-head"><h2 id="implementation">实现与验证</h2><p>React/Vite 提交参数并呈现轨迹及回放。FastAPI 校验请求，由 Python 和 NumPy 生成数据、执行滤波并返回诊断。离线命令复用同一套实验计算逻辑，并另行输出配置、数据与 Matplotlib 图表。</p></div>
+        <div class="detail-grid">
+          <div class="prose">
+            <h3>V0.1 工作台验收记录</h3>
+            <p>第 3 步记录了 193 项严格回归通过。实际 HTTP 对照覆盖 KF 默认、EKF 四个预设和 Fusion 五种配置，比较时间轴、观测、估计、诊断与指标。截图来自 Chrome 的本地生产预览。</p>
+            <p><a class="back-link" href="../articles/ekf-interactive-lab.html#verify">阅读验证方法</a></p>
+          </div>
+          <div class="prose">
+            <h3>当前模型范围</h3>
+            <p>证据限于二维合成场景。Fusion 假设姿态已知，延迟为单源固定值。三维姿态、零偏估计、真实飞行验证、随时间变化的迟到及乱序均超出 V0.1 范围。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="run">
+      <div class="shell">
+        <div class="section-head"><h2 id="run">在本地运行</h2><p>静态作品集展示截图、图表和文章。运行完整工作台需要先取得工程文件，再启动本机前后端。使用 Python 3.12、Node.js 24 与 npm，按源码中的依赖声明安装。</p></div>
+        <div class="detail-grid">
+          <div class="prose">
+            <h3>Windows PowerShell</h3>
+            <pre class="code"><code># 后端终端，从专题根目录执行
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+
+# 新开前端终端，从专题根目录执行
+cd frontend
+npm.cmd ci
+npm.cmd run dev</code></pre>
+          </div>
+          <div class="prose">
+            <h3>WSL / Linux</h3>
+            <pre class="code"><code># 后端终端，从专题根目录执行
+python3.12 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+
+# 新开前端终端，从专题根目录执行
+cd frontend
+npm ci
+npm run dev</code></pre>
+          </div>
+        </div>
+        <div class="prose run-notes">
+          <p>在浏览器打开前端终端打印的本机地址。Windows 与 WSL/Linux 分别创建虚拟环境。</p>
+          <h3>离线复现与测试</h3>
+          <p>从专题根目录使用该系统的虚拟环境运行以下命令。PowerShell 可将命令中的 <code>python</code> 换成 <code>.\.venv\Scripts\python.exe</code>。各实验输出到指定的独立目录。</p>
+          <pre class="code"><code>python -m experiments.run --experiment basic --output-dir repro/kf
+python -m experiments.run_ekf --scenario angle-wrap --output-dir repro/ekf
+python -m experiments.run_fusion --scenario dropout --output-dir repro/fusion
+python -m pytest -q -W error</code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="shell footer-inner"><a class="back-link" href="../index.html">返回作品集首页</a><span>EKF Interactive Lab V0.1</span></div>
+  </footer>
+</body>
+</html>

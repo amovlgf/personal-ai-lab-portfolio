@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Personal AI Lab 的技术实验、视觉表达与 AI 协作作品。">
+  <title>Personal AI Lab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell nav">
+      <a class="brand" href="index.html">Personal AI Lab</a>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="#directions">探索方向</a>
+        <a href="projects/ekf-interactive-lab.html">项目</a>
+        <a href="articles/ekf-interactive-lab.html">文章</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="shell hero">
+      <div class="hero-copy">
+        <p class="eyebrow">个人研究与创作</p>
+        <h1>Personal<br>AI Lab</h1>
+        <p class="lead">以六周专题探索技术、视觉表达与 AI 协作，把研究整理成可运行、可复核的作品。</p>
+        <p class="hero-project"><strong>首个作品 · EKF Interactive Lab</strong><br>用交互实验学习 KF、EKF 与简化二维 IMU/GPS 融合。</p>
+        <div class="button-row">
+          <a class="button" href="projects/ekf-interactive-lab.html">查看项目详情</a>
+          <a class="button secondary" href="articles/ekf-interactive-lab.html">阅读项目文章</a>
+        </div>
+      </div>
+      <figure class="hero-art">
+        <a href="assets/ekf.png"><img src="assets/ekf.png" alt="查看 EKF Lab 原图，含固定信标、方位角跨界场景、轨迹与指标" width="1440" height="1000"></a>
+        <figcaption class="caption">EKF Interactive Lab 本地工作台 · 方位角跨越 ±π 预设</figcaption>
+      </figure>
+    </section>
+
+    <section class="section" aria-labelledby="directions">
+      <div class="shell">
+        <div class="section-head"><h2 id="directions">探索方向</h2></div>
+        <div class="grid-3">
+          <article class="card"><p class="tag">Tech Lab</p><h3>技术探索</h3><p>用仿真、代码和可复现实验理解机器人、AI 与数学问题。</p></article>
+          <article class="card"><p class="tag">Creative Lab</p><h3>创造表达</h3><p>用交互、图解和动画呈现研究过程与技术结果。</p></article>
+          <article class="card"><p class="tag">Agent Lab</p><h3>AI 协作</h3><p>用工具调用和工作流辅助资料整理、检查和交接。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="experiments">
+      <div class="shell">
+        <div class="section-head"><h2 id="experiments">两组实验图</h2><p>图表来自 V0.1 的二维合成预设。打开原图可查看坐标轴和图例。</p></div>
+        <div class="image-grid">
+          <figure class="figure">
+            <a href="assets/kf-basic-trajectory.png"><img src="assets/kf-basic-trajectory.png" alt="查看 KF 基础场景的真值、GPS 观测与估计轨迹原图" loading="lazy"></a>
+            <figcaption>KF 基线在同一条轨迹上对照真值、含噪 GPS 与估计。</figcaption>
+          </figure>
+          <figure class="figure">
+            <a href="assets/fusion-dropout-error.png"><img src="assets/fusion-dropout-error.png" alt="查看 GPS 中断期间纯惯性和在线融合误差对照原图" loading="lazy"></a>
+            <figcaption>Fusion 的 GPS 中断区间用阴影标出。纯惯性与融合使用同一份 IMU 输入。</figcaption>
+          </figure>
+        </div>
+        <p class="result-note"><a class="back-link" href="projects/ekf-interactive-lab.html#results">查看完整实验对照</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer-inner"><span>Personal AI Lab</span><span>EKF Interactive Lab V0.1</span></div>
+  </footer>
+</body>
+</html>
